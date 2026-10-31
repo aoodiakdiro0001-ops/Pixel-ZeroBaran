@@ -190,7 +190,7 @@ class PixelZeroBaranBot:
 
     # ------------------------------------------------------------------ #
     def _process_photo(self, chat_id: str, photo_sizes: list, caption: str) -> None:
-        # نختار أعلى دقة متاحة
+        # نختار أعلى جودة متاحة
         biggest = max(photo_sizes, key=lambda p: p.get("file_size", 0))
         self.send_message(chat_id, "⏳ جارٍ معالجة الصورة... قد تستغرق 30-60 ثانية.")
 
