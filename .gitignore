@@ -1,0 +1,18 @@
+# Pixel-ZeroBaran — ملفات لا يجب رفعها لمستودع Git
+.env
+assets/raw/*
+assets/output/*
+assets/temp/*
+assets/local_db.jsonl
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.log
+.DS_Store
+.idea/
+.vscode/

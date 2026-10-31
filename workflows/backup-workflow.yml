@@ -1,0 +1,14 @@
+# نسخة احتياطية من workflow داخل مجلد workflows
+# (لمن يريد نسخها يدوياً خارج .github)
+# المؤلف: Baran Avisat — Baranavisat@gmail.com
+
+name: Pixel-ZeroBaran Backup Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Pixel-ZeroBaran backup workflow ready."

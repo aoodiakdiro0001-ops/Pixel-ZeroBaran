@@ -1,0 +1,91 @@
+# ============================================================
+# Pixel-ZeroBaran | GitHub Actions Workflow
+# يعالج دفعات الصور بشكل مجدول (يومياً عند منتصف الليل UTC)
+# أو يدوياً عبر زر التشغيل من تبويب Actions.
+# المؤلف: Baran Avisat — Baranavisat@gmail.com
+# ============================================================
+name: Pixel-ZeroBaran Batch Processor
+
+on:
+  schedule:
+    # كل يوم الساعة 00:00 UTC (يمكن تعديلها)
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      style:
+        description: 'النمط البصري'
+        required: false
+        default: 'studio_marble'
+        type: choice
+        options:
+          - studio_marble
+          - sunny_beach
+          - minimal_white
+          - luxury_dark
+          - forest_nature
+      delay:
+        description: 'التأخير بين الصور (ثواني)'
+        required: false
+        default: '2.0'
+
+jobs:
+  batch:
+    name: معالجة الدفعة البصرية
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 استخراج الكود
+        uses: actions/checkout@v4
+
+      - name: 🐍 تجهيز Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 تثبيت التبعيات
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🔐 تحميل الأسرار إلى .env
+        run: |
+          cat > .env <<EOF
+          HF_TOKEN=${{ secrets.HF_TOKEN }}
+          HF_MODEL_BG=${{ vars.HF_MODEL_BG }}
+          HF_MODEL_INPAINT=${{ vars.HF_MODEL_INPAINT }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL=${{ vars.GEMINI_MODEL }}
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          SUPABASE_BUCKET_RAW=${{ vars.SUPABASE_BUCKET_RAW }}
+          SUPABASE_BUCKET_GENERATED=${{ vars.SUPABASE_BUCKET_GENERATED }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
+          EOF
+
+      - name: 🎨 تشغيل معالج الدفعات
+        env:
+          INPUT_DIR: assets/raw
+        run: |
+          mkdir -p $INPUT_DIR
+          # مثال: إذا كانت الصور الخام موجودة في assets/raw ستعالَج
+          if [ "$(ls -A $INPUT_DIR 2>/dev/null)" ]; then
+            python main.py batch "$INPUT_DIR" \
+              --style "${{ github.event.inputs.style || 'studio_marble' }}" \
+              --delay "${{ github.event.inputs.delay || '2.0' }}" \
+              --report batch_report.json
+            echo "=== تقرير الدفعة ==="
+            cat batch_report.json
+          else
+            echo "⚠️ لا توجد صور في $INPUT_DIR — تخطّي."
+          fi
+
+      - name: 📤 رفع التقرير كأرتي فاكت
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: batch-report
+          path: batch_report.json
+          retention-days: 30
